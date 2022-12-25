@@ -1,9 +1,30 @@
 import socket
 import threading
 
-from .resp_decoder import RESPDecoder
+from app.resp_decoder import RESPDecoder
 
 database = {}
+
+
+def handle_ping(client_connection):
+    client_connection.send(b"+PONG\r\n")
+
+
+def handle_echo(client_connection, args):
+    client_connection.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
+
+
+def handle_set(client_connection, args):
+    database[args[0]] = args[1]
+    client_connection.send(b"+OK\r\n")
+
+
+def handle_get(client_connection, args):
+    value = database.get(args[0])
+    if value is None:
+        client_connection.send(b"+(nil)\r\n")
+    else:
+        client_connection.send(b"$%d\r\n%b\r\n" % (len(value), value))
 
 
 def handle_connection(client_connection):
@@ -12,18 +33,13 @@ def handle_connection(client_connection):
             command, *args = RESPDecoder(client_connection).decode()
 
             if command == b"ping":
-                client_connection.send(b"+PONG\r\n")
+                handle_ping(client_connection)
             elif command == b"echo":
-                client_connection.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
+                handle_echo(client_connection, args)
             elif command == b"set":
-                database[args[0]] = args[1]
-                client_connection.send(b"+OK\r\n")
+                handle_set(client_connection, args)
             elif command == b"get":
-                value = database.get(args[0])
-                if value is None:
-                    client_connection.send(b"+(nil)\r\n")
-                else:
-                    client_connection.send(b"$%d\r\n%b\r\n" % (len(value), value))
+                handle_get(client_connection, args)
             else:
                 client_connection.send(b"-ERR unknown command\r\n")
         except ConnectionError:
