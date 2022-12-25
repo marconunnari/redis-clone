@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 from app.resp_decoder import RESPDecoder
 
@@ -15,14 +16,30 @@ def handle_echo(client_connection, args):
 
 
 def handle_set(client_connection, args):
-    database[args[0]] = args[1]
+    expiry = None
+    # Check for "px" argument and extract expiry value
+    if b"px" in args:
+        expiry_index = args.index(b"px") + 1
+        expiry = int(args[expiry_index])
+        expiry = int(time.time() * 1000) + expiry
+        args = args[: expiry_index - 1] + args[expiry_index + 1 :]
+
+    database[args[0]] = (args[1], expiry)
     client_connection.send(b"+OK\r\n")
 
 
 def handle_get(client_connection, args):
-    value = database.get(args[0])
-    if value is None:
-        client_connection.send(b"+(nil)\r\n")
+    key = args[0]
+    entry = database.get(key)
+
+    if entry is None:
+        client_connection.send(b"$-1\r\n")
+        return
+
+    value, expiry = entry
+    if expiry is not None and expiry <= int(time.time() * 1000):
+        del database[key]
+        client_connection.send(b"$-1\r\n")
     else:
         client_connection.send(b"$%d\r\n%b\r\n" % (len(value), value))
 
