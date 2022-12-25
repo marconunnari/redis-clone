@@ -1,12 +1,20 @@
 import socket
 import threading
 
+from .resp_decoder import RESPDecoder
+
 
 def handle_connection(client_connection):
     while True:
         try:
-            client_connection.recv(1024)  # wait for client to send data
-            client_connection.send(b"+PONG\r\n")
+            command, *args = RESPDecoder(client_connection).decode()
+
+            if command == b"ping":
+                client_connection.send(b"+PONG\r\n")
+            elif command == b"echo":
+                client_connection.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
+            else:
+                client_connection.send(b"-ERR unknown command\r\n")
         except ConnectionError:
             break  # Stop serving if the client connection is closed
 
