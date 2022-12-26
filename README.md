@@ -1,61 +1,42 @@
-![progress-banner](https://app.codecrafters.io/progress/redis/8729b557-ae41-4925-aab4-826b65d14dad)
+# Redis Clone
 
-This is a starting point for Python solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+This is a simple implementation of a Redis clone written in Python.
+It is not meant to be a fully-featured Redis server, but rather a demonstration of how the Redis protocol works.
+I developed it following the challenge on the wonderful website [CodeCrafters](https://codecrafters.io/).
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+## Features
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+The following Redis commands are implemented:
 
-# Passing the first stage
+- `PING`: Sends a `PONG` response to the client.
+- `ECHO`: Echoes back the provided argument to the client.
+- `SET`: Sets a key-value pair in the database. Optionally takes a `px` argument to set an expiry time in milliseconds.
+- `GET`: Gets the value of a key from the database. If the key has an expiry time set and it has passed, the key-value pair is deleted and `-1` is returned to the client.
 
-The entry point for your Redis implementation is in `app/main.py`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+## Running the Server
 
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
-
-That's all!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `python (3.x)` installed locally
-1. Run `./spawn_redis_server.sh` to run your Redis server, which is implemented
-   in `app/main.py`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
-
-# Troubleshooting
-
-## module `socket` has no attribute `create_server`
-
-When running your server locally, you might see an error like this:
+To run the server, simply execute the following command (it requires Python 3):
 
 ```
-Traceback (most recent call last):
-  File "/.../python3.7/runpy.py", line 193, in _run_module_as_main
-    "__main__", mod_spec)
-  File "/.../python3.7/runpy.py", line 85, in _run_code
-    exec(code, run_globals)
-  File "/app/app/main.py", line 11, in <module>
-    main()
-  File "/app/app/main.py", line 6, in main
-    s = socket.create_server(("localhost", 6379), reuse_port=True)
-AttributeError: module 'socket' has no attribute 'create_server'
+./redis-clone
 ```
 
-This is because `socket.create_server` was introduced in Python 3.8, and you
-might be running an older version.
+The server will listen on `localhost:6379` for incoming connections.
 
-You can fix this by installing Python 3.8 locally and using that.
+## Connecting to the Server
 
-If you'd like to use a different version of Python, change the `language_pack`
-value in `codecrafters.yml`.
+You can use any Redis client to connect to the server. For example, to connect to the server using `redis-cli`, run the following command:
+
+```
+redis-cli -h localhost -p 6379
+```
+
+You should then see a `127.0.0.1:6379>` prompt, where you can enter Redis commands as you would with a regular Redis server.
+
+## Limitations
+
+This Redis clone has several limitations compared to a real Redis server:
+
+- Only a limited set of commands are implemented.
+- The database is not persisted to disk, so all data is lost when the server is stopped.
+- There is no support for multiple databases or authentication.
