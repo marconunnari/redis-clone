@@ -2,7 +2,7 @@ import socket
 import threading
 import time
 
-from app.resp_decoder import RESPDecoder
+from .resp_decoder import RESPDecoder
 
 database = {}
 
@@ -48,14 +48,14 @@ def handle_connection(client_connection):
     while True:
         try:
             command, *args = RESPDecoder(client_connection).decode()
-
-            if command == b"ping":
+            command = command.decode("ascii").lower()
+            if command == "ping":
                 handle_ping(client_connection)
-            elif command == b"echo":
+            elif command == "echo":
                 handle_echo(client_connection, args)
-            elif command == b"set":
+            elif command == "set":
                 handle_set(client_connection, args)
-            elif command == b"get":
+            elif command == "get":
                 handle_get(client_connection, args)
             else:
                 client_connection.send(b"-ERR unknown command\r\n")
